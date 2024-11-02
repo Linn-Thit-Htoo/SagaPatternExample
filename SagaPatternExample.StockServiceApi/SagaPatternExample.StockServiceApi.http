@@ -1,0 +1,6 @@
+@SagaPatternExample.StockServiceApi_HostAddress = http://localhost:5170
+
+GET {{SagaPatternExample.StockServiceApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
