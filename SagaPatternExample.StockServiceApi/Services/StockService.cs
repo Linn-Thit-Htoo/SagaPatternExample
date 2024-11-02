@@ -15,7 +15,7 @@ namespace SagaPatternExample.StockServiceApi.Services
 
         public async Task ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs)
         {
-            foreach (var item in requestModel.Products)
+            foreach (var item in requestModel.OrderDetails)
             {
                 var stock = await _context.TbStockEntries
                     .Where(x => x.ProductId == item.ProductId)

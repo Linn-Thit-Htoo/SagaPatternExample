@@ -8,7 +8,7 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
     {
         public int UserId { get; set; }
         public decimal TotalAmount { get; set; }
-        public List<CreateOrderDetialRequestDTO> OrderDetils { get; set; }
+        public List<CreateOrderDetialRequestDTO> OrderDetails { get; set; }
     }
 
     public class CreateOrderDetialRequestDTO

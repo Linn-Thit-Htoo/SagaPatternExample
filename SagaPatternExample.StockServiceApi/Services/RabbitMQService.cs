@@ -1,6 +1,10 @@
 ﻿
+using Newtonsoft.Json;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using SagaPatternExample.StockServiceApi.Config;
+using SagaPatternExample.StockServiceApi.Models;
+using System.Text;
 
 namespace SagaPatternExample.StockServiceApi.Services
 {
@@ -15,9 +19,34 @@ namespace SagaPatternExample.StockServiceApi.Services
             _scopeFactory = scopeFactory;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            throw new NotImplementedException();
+            IConnection _connection = this.CreateChannel();
+            var _channel = _connection.CreateModel();
+
+            foreach (Queues item in _rabbitConfig.QueueList!)
+            {
+                _channel.ExchangeDeclare(item.Exchange, "direct", durable: true);
+                _channel.QueueDeclare(queue: item.Queue, durable: true, exclusive: false, autoDelete: false);
+                _channel.QueueBind(item.Queue, item.Exchange, item.RoutingKey, null);
+                _channel.BasicQos(0, 1, false);
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.Received += async (ch, ea) =>
+                {
+                    var content = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    if (ea.RoutingKey.Equals("order_direct"))
+                    {
+                        OrderProductRequestModel requestModel = JsonConvert.DeserializeObject<OrderProductRequestModel>(content)!;
+                        using var scope = _scopeFactory.CreateScope();
+                        var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
+
+                        await stockService.ProcessStockAsync(requestModel, stoppingToken);
+                    }
+                };
+                _channel.BasicConsume(item.Queue, false, consumer);
+            }
+
+            await Task.CompletedTask;
         }
 
         private IConnection CreateChannel()

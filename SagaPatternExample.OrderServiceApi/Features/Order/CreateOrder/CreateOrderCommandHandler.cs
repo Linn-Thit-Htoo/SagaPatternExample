@@ -18,7 +18,7 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
         internal const string ExchangeName = "DirectExchange";
         internal const string RoutingKey = "order_direct";
         private readonly RabbitMqConfiguration _rabbitConfig;
-        private const string QueueName = "order_queue";
+        private const string QueueName = "OrderQueue";
 
         public CreateOrderCommandHandler(AppDbContext context, IConfiguration config)
         {
@@ -30,7 +30,7 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
         {
             var orderEntity = request.ToEntity();
             await _context.TbOrders.AddAsync(orderEntity, cancellationToken);
-            foreach (var item in request.OrderDetils)
+            foreach (var item in request.OrderDetails)
             {
                 await _context.TbOrderDetails.AddAsync(item.ToEntity(orderEntity.InvoiceNo), cancellationToken);
             }
@@ -38,7 +38,8 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
 
             var orderCreatedSuccessEvent = new OrderCreatedEvent()
             {
-                InvoiceNo = orderEntity.InvoiceNo
+                InvoiceNo = orderEntity.InvoiceNo,
+                OrderDetails = request.OrderDetails
             };
             PublishOrderCreatedMessage(orderCreatedSuccessEvent);
 
@@ -74,9 +75,8 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
             channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
             channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
-
-            var message = new { orderCreatedEvent.InvoiceNo };
-            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+            
+            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(orderCreatedEvent));
 
             channel.BasicPublish(
                 exchange: ExchangeName,
