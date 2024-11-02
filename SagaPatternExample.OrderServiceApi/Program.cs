@@ -5,6 +5,14 @@ using SagaPatternExample.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
+            .AddJsonFile(
+                $"appsettings.{builder.Environment.EnvironmentName}.json",
+                optional: false,
+                reloadOnChange: true
+            )
+            .AddEnvironmentVariables();
+
 // Add services to the container.
 
 builder.Services.AddControllers()
