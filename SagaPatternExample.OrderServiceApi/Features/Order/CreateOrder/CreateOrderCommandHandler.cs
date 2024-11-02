@@ -38,7 +38,7 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
 
             var orderCreatedSuccessEvent = new OrderCreatedEvent()
             {
-                OrderId = orderEntity.OrderId
+                InvoiceNo = orderEntity.InvoiceNo
             };
             PublishOrderCreatedMessage(orderCreatedSuccessEvent);
 
@@ -75,7 +75,7 @@ namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
 
             channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
 
-            var message = new { OrderId = orderCreatedEvent.OrderId };
+            var message = new { orderCreatedEvent.InvoiceNo };
             var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
 
             channel.BasicPublish(

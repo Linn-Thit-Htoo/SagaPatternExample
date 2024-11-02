@@ -2,5 +2,6 @@
 {
     public interface IOrderService
     {
+        Task RollbackOrderAsync(string invoice, CancellationToken cs);
     }
 }
