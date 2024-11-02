@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SagaPatternExample.Db.AppDbContextModels;
 using SagaPatternExample.OrderServiceApi.Config;
+using SagaPatternExample.OrderServiceApi.Services;
 
 namespace SagaPatternExample.OrderServiceApi.Extensions
 {
@@ -17,6 +18,8 @@ namespace SagaPatternExample.OrderServiceApi.Extensions
             {
                 opt.RegisterServicesFromAssembly(typeof(DependencyInjectionExtension).Assembly);
             });
+
+            services.AddScoped<IOrderService, OrderService>();
 
             services.AddHttpContextAccessor();
             services.Configure<RabbitMqConfiguration>(config.GetSection("RabbitMQ"));
