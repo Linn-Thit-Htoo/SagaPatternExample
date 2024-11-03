@@ -1,5 +1,4 @@
-﻿
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SagaPatternExample.StockServiceApi.Behaviors;
@@ -14,8 +13,8 @@ namespace SagaPatternExample.StockServiceApi.Services
         internal readonly RabbitMqConfiguration _rabbitConfig;
         internal readonly IServiceScopeFactory _scopeFactory;
         internal const string ExchangeName = "DirectExchange";
-        internal const string RoutingKey = "order_direct";
-        private const string QueueName = "OrderQueue";
+        internal const string RoutingKey = "stock_direct";
+        private const string QueueName = "StockQueue";
 
         public RabbitMQService(IConfiguration config, IServiceScopeFactory scopeFactory)
         {

@@ -25,6 +25,8 @@ namespace SagaPatternExample.OrderServiceApi.Extensions
             services.Configure<RabbitMqConfiguration>(config.GetSection("RabbitMQ"));
             services.AddHealthChecks();
 
+            services.AddHostedService<RabbitMQService>();
+
             return services;
         }
     }
