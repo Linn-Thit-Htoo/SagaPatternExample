@@ -12,11 +12,14 @@ public static class Mapper
             UserId = createOrderCommand.UserId,
             CreatedAt = DateTime.Now,
             TotalAmount = createOrderCommand.TotalAmount,
-            InvoiceNo = Ulid.NewUlid().ToString()
+            InvoiceNo = Ulid.NewUlid().ToString(),
         };
     }
 
-    public static TbOrderDetail ToEntity(this CreateOrderDetialRequestDTO createOrderDetialRequest, string invoice)
+    public static TbOrderDetail ToEntity(
+        this CreateOrderDetialRequestDTO createOrderDetialRequest,
+        string invoice
+    )
     {
         return new TbOrderDetail
         {
@@ -24,7 +27,7 @@ public static class Mapper
             ProductId = createOrderDetialRequest.ProductId,
             Qty = createOrderDetialRequest.Qty,
             Price = createOrderDetialRequest.Price,
-            Subtotal = createOrderDetialRequest.Subtotal
+            Subtotal = createOrderDetialRequest.Subtotal,
         };
     }
 }
