@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using SagaPatternExample.Db.AppDbContextModels;
+﻿using SagaPatternExample.Db.AppDbContextModels;
 using SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder;
 
 namespace SagaPatternExample.OrderServiceApi.Extensions
