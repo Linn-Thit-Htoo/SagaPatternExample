@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SagaPatternExample.Db.AppDbContextModels;
 
 namespace SagaPatternExample.OrderServiceApi.Services
