@@ -14,12 +14,13 @@ public class OrderService : IOrderService
 
     public async Task RollbackOrderAsync(string invoice, CancellationToken cs)
     {
-        var item = await _context.TbOrders.FirstOrDefaultAsync(x => x.InvoiceNo == invoice, cancellationToken: cs);
+        var item = await _context.TbOrders.FirstOrDefaultAsync(
+            x => x.InvoiceNo == invoice,
+            cancellationToken: cs
+        );
         ArgumentNullException.ThrowIfNull(item, nameof(item));
 
-        var lst = await _context.TbOrderDetails
-            .Where(x => x.InvoiceNo == invoice)
-            .ToListAsync(cs);
+        var lst = await _context.TbOrderDetails.Where(x => x.InvoiceNo == invoice).ToListAsync(cs);
         ArgumentNullException.ThrowIfNull(lst, nameof(lst));
 
         _context.TbOrders.Remove(item);
