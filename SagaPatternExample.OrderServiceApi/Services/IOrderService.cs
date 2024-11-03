@@ -1,7 +1,6 @@
-﻿namespace SagaPatternExample.OrderServiceApi.Services
+﻿namespace SagaPatternExample.OrderServiceApi.Services;
+
+public interface IOrderService
 {
-    public interface IOrderService
-    {
-        Task RollbackOrderAsync(string invoice, CancellationToken cs);
-    }
+    Task RollbackOrderAsync(string invoice, CancellationToken cs);
 }
