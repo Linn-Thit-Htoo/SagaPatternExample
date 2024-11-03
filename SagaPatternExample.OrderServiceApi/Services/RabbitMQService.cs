@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SagaPatternExample.OrderServiceApi.Behaviors;
 using SagaPatternExample.OrderServiceApi.Config;
-using System.Text;
 
 namespace SagaPatternExample.OrderServiceApi.Services;
 
@@ -26,7 +26,12 @@ public class RabbitMQService : BackgroundService
         foreach (Queues item in _rabbitConfig.QueueList!)
         {
             _channel.ExchangeDeclare(item.Exchange, "direct", durable: true);
-            _channel.QueueDeclare(queue: item.Queue, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueDeclare(
+                queue: item.Queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false
+            );
             _channel.QueueBind(item.Queue, item.Exchange, item.RoutingKey, null);
             _channel.BasicQos(0, 1, false);
             var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -36,7 +41,8 @@ public class RabbitMQService : BackgroundService
 
                 if (ea.RoutingKey.Equals("stock_direct"))
                 {
-                    StockReductionFailEvent _event = JsonConvert.DeserializeObject<StockReductionFailEvent>(content)!;
+                    StockReductionFailEvent _event =
+                        JsonConvert.DeserializeObject<StockReductionFailEvent>(content)!;
                     using var scope = _scopeFactory.CreateScope();
                     var service = scope.ServiceProvider.GetRequiredService<IOrderService>();
 
@@ -50,13 +56,14 @@ public class RabbitMQService : BackgroundService
 
     private IConnection CreateChannel()
     {
-        ConnectionFactory connectionFactory = new()
-        {
-            HostName = _rabbitConfig.HostName,
-            UserName = _rabbitConfig.Username,
-            Password = _rabbitConfig.Password,
-            VirtualHost = "/"
-        };
+        ConnectionFactory connectionFactory =
+            new()
+            {
+                HostName = _rabbitConfig.HostName,
+                UserName = _rabbitConfig.Username,
+                Password = _rabbitConfig.Password,
+                VirtualHost = "/",
+            };
 
         connectionFactory.AutomaticRecoveryEnabled = true;
         connectionFactory.NetworkRecoveryInterval = TimeSpan.FromSeconds(5);
