@@ -1,6 +1,3 @@
-﻿namespace SagaPatternExample.StockServiceApi.Extensions
-{
-    public class Mapper
-    {
-    }
-}
+﻿namespace SagaPatternExample.StockServiceApi.Extensions;
+
+public class Mapper { }
