@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using SagaPatternExample.StockServiceApi.Behaviors;
 using SagaPatternExample.StockServiceApi.Config;
 using SagaPatternExample.StockServiceApi.Models;
 using System.Text;
@@ -12,6 +13,9 @@ namespace SagaPatternExample.StockServiceApi.Services
     {
         internal readonly RabbitMqConfiguration _rabbitConfig;
         internal readonly IServiceScopeFactory _scopeFactory;
+        internal const string ExchangeName = "DirectExchange";
+        internal const string RoutingKey = "order_direct";
+        private const string QueueName = "OrderQueue";
 
         public RabbitMQService(IConfiguration config, IServiceScopeFactory scopeFactory)
         {
@@ -40,7 +44,11 @@ namespace SagaPatternExample.StockServiceApi.Services
                         using var scope = _scopeFactory.CreateScope();
                         var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
 
-                        await stockService.ProcessStockAsync(requestModel, stoppingToken);
+                        var result = await stockService.ProcessStockAsync(requestModel, stoppingToken);
+                        if (!result.IsSuccess)
+                        {
+                            PublishStockFailEvent(requestModel.InvoiceNo);
+                        }
                     }
                 };
                 _channel.BasicConsume(item.Queue, false, consumer);
@@ -65,6 +73,27 @@ namespace SagaPatternExample.StockServiceApi.Services
             connectionFactory.DispatchConsumersAsync = true;
 
             return connectionFactory.CreateConnection();
+        }
+
+        private void PublishStockFailEvent(string invoiceNo)
+        {
+            IConnection connection = CreateChannel();
+            using var channel = connection.CreateModel();
+
+            channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Direct, durable: true);
+
+            channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+            channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
+
+            var stockFailEvent = new StockReductionFailEvent() { InvoiceNo = invoiceNo };
+            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(stockFailEvent));
+
+            channel.BasicPublish(
+                exchange: ExchangeName,
+                routingKey: RoutingKey,
+                basicProperties: null,
+                body: messageBody);
         }
     }
 }

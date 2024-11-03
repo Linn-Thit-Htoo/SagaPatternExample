@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using SagaPatternExample.Db.AppDbContextModels;
 using SagaPatternExample.StockServiceApi.Models;
+using SagaPatternExample.Utils;
 
 namespace SagaPatternExample.StockServiceApi.Services
 {
@@ -13,27 +16,39 @@ namespace SagaPatternExample.StockServiceApi.Services
             _context = context;
         }
 
-        public async Task ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs)
+        public async Task<Result<StockModel>> ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs)
         {
-            foreach (var item in requestModel.OrderDetails)
+            Result<StockModel> result;
+            try
             {
-                var stock = await _context.TbStockEntries
-                    .Where(x => x.ProductId == item.ProductId)
-                    .FirstOrDefaultAsync(cs);
-                ArgumentNullException.ThrowIfNull(stock);
-
-                if (item.Qty > stock.Stock)
+                foreach (var item in requestModel.OrderDetails)
                 {
-                    // fail stock event
-                }
+                    var stock = await _context.TbStockEntries
+                        .Where(x => x.ProductId == item.ProductId)
+                        .FirstOrDefaultAsync(cs);
+                    ArgumentNullException.ThrowIfNull(stock);
 
-                else
-                {
+                    if (item.Qty > stock.Stock)
+                    {
+                        // fail stock event
+                        result = Result<StockModel>.Fail("Insufficient Stock.");
+                        goto result;
+                    }
+
                     stock.Stock -= item.Qty;
                     _context.TbStockEntries.Update(stock);
-                    await _context.SaveChangesAsync(cs);
                 }
+
+                await _context.SaveChangesAsync(cs);
+                result = Result<StockModel>.Success();
             }
+            catch (Exception ex)
+            {
+                result = Result<StockModel>.Fail(ex);
+            }
+
+        result:
+            return result;
         }
     }
 }
