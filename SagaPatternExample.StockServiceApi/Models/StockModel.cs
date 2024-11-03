@@ -1,11 +1,13 @@
 ﻿namespace SagaPatternExample.StockServiceApi.Models;
 
 public class StockModel { }
+
 public class OrderProductRequestModel
 {
     public string InvoiceNo { get; set; }
     public List<CreateOrderDetialRequestDTO> OrderDetails { get; set; }
 }
+
 public class CreateOrderDetialRequestDTO
 {
     public int ProductId { get; set; }
