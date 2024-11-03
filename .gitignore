@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/SagaPatternExample.OrderServiceApi/appsettings.json
+/SagaPatternExample.OrderServiceApi/appsettings.Development.json
+/SagaPatternExample.StockServiceApi/appsettings.json
+/SagaPatternExample.StockServiceApi/appsettings.Development.json
