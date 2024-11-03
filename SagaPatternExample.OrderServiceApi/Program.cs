@@ -5,34 +5,43 @@ using SagaPatternExample.Utils.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.SetBasePath(builder.Environment.ContentRootPath)
-            .AddJsonFile(
-                $"appsettings.{builder.Environment.EnvironmentName}.json",
-                optional: false,
-                reloadOnChange: true
-            )
-            .AddEnvironmentVariables();
+builder
+    .Configuration.SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile(
+        $"appsettings.{builder.Environment.EnvironmentName}.json",
+        optional: false,
+        reloadOnChange: true
+    )
+    .AddEnvironmentVariables();
 
 // Add services to the container.
 
-builder.Services.AddControllers()
-                .ConfigureApiBehaviorOptions(options =>
+builder
+    .Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = actionContext =>
+        {
+            var validationErrors = actionContext
+                .ModelState.SelectMany(x => x.Value!.Errors)
+                .Select(y => y.ErrorMessage)
+                .ToList();
+            return new OkObjectResult(
+                new Result<List<string>>()
                 {
-                    options.InvalidModelStateResponseFactory = actionContext =>
-                    {
-                        var validationErrors = actionContext.ModelState.SelectMany(x => x.Value!.Errors).Select(y => y.ErrorMessage).ToList();
-                        return new OkObjectResult(new Result<List<string>>()
-                        {
-                            Data = validationErrors,
-                            IsSuccess = false,
-                            Message = "Fail",
-                            StatusCode = EnumHttpStatusCode.Success
-                        });
-                    };
-                }).AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.PropertyNamingPolicy = null;
-                });
+                    Data = validationErrors,
+                    IsSuccess = false,
+                    Message = "Fail",
+                    StatusCode = EnumHttpStatusCode.Success,
+                }
+            );
+        };
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
