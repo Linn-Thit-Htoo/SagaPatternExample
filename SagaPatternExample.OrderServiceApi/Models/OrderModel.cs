@@ -1,6 +1,3 @@
-﻿namespace SagaPatternExample.OrderServiceApi.Models
-{
-    public class OrderModel
-    {
-    }
-}
+﻿namespace SagaPatternExample.OrderServiceApi.Models;
+
+public class OrderModel { }
