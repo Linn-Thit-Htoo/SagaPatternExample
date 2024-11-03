@@ -1,7 +1,6 @@
-﻿namespace SagaPatternExample.StockServiceApi.Behaviors
+﻿namespace SagaPatternExample.StockServiceApi.Behaviors;
+
+public class StockReductionFailEvent
 {
-    public class StockReductionFailEvent
-    {
-        public string InvoiceNo { get; set; }
-    }
+    public string InvoiceNo { get; set; }
 }
