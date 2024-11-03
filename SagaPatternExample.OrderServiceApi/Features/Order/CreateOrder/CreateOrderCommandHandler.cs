@@ -9,79 +9,78 @@ using SagaPatternExample.OrderServiceApi.Models;
 using SagaPatternExample.Utils;
 using System.Text;
 
-namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder
+namespace SagaPatternExample.OrderServiceApi.Features.Order.CreateOrder;
+
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Result<OrderModel>>
 {
-    public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Result<OrderModel>>
+    internal readonly AppDbContext _context;
+    internal const string ExchangeName = "DirectExchange";
+    internal const string RoutingKey = "order_direct";
+    private readonly RabbitMqConfiguration _rabbitConfig;
+    private const string QueueName = "OrderQueue";
+
+    public CreateOrderCommandHandler(AppDbContext context, IConfiguration config)
     {
-        internal readonly AppDbContext _context;
-        internal const string ExchangeName = "DirectExchange";
-        internal const string RoutingKey = "order_direct";
-        private readonly RabbitMqConfiguration _rabbitConfig;
-        private const string QueueName = "OrderQueue";
+        _rabbitConfig = config.GetSection("RabbitMQ").Get<RabbitMqConfiguration>()!;
+        _context = context;
+    }
 
-        public CreateOrderCommandHandler(AppDbContext context, IConfiguration config)
+    public async Task<Result<OrderModel>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    {
+        var orderEntity = request.ToEntity();
+        await _context.TbOrders.AddAsync(orderEntity, cancellationToken);
+        foreach (var item in request.OrderDetails)
         {
-            _rabbitConfig = config.GetSection("RabbitMQ").Get<RabbitMqConfiguration>()!;
-            _context = context;
+            await _context.TbOrderDetails.AddAsync(item.ToEntity(orderEntity.InvoiceNo), cancellationToken);
         }
+        await _context.SaveChangesAsync(cancellationToken);
 
-        public async Task<Result<OrderModel>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+        var orderCreatedSuccessEvent = new OrderCreatedEvent()
         {
-            var orderEntity = request.ToEntity();
-            await _context.TbOrders.AddAsync(orderEntity, cancellationToken);
-            foreach (var item in request.OrderDetails)
-            {
-                await _context.TbOrderDetails.AddAsync(item.ToEntity(orderEntity.InvoiceNo), cancellationToken);
-            }
-            await _context.SaveChangesAsync(cancellationToken);
+            InvoiceNo = orderEntity.InvoiceNo,
+            OrderDetails = request.OrderDetails
+        };
+        PublishOrderCreatedMessage(orderCreatedSuccessEvent);
 
-            var orderCreatedSuccessEvent = new OrderCreatedEvent()
-            {
-                InvoiceNo = orderEntity.InvoiceNo,
-                OrderDetails = request.OrderDetails
-            };
-            PublishOrderCreatedMessage(orderCreatedSuccessEvent);
-
-            return Result<OrderModel>.Success();
-        }
-        private IConnection CreateChannel()
+        return Result<OrderModel>.Success();
+    }
+    private IConnection CreateChannel()
+    {
+        ConnectionFactory connectionFactory = new ConnectionFactory
         {
-            ConnectionFactory connectionFactory = new ConnectionFactory
-            {
-                //HostName = _rabbitConfig.HostName,
-                UserName = _rabbitConfig.Username,
-                Password = _rabbitConfig.Password,
-                HostName = "localhost",
-                VirtualHost = "/",
-                //ClientProperties = { ["IP"] = myIP }
-            };
+            //HostName = _rabbitConfig.HostName,
+            UserName = _rabbitConfig.Username,
+            Password = _rabbitConfig.Password,
+            HostName = "localhost",
+            VirtualHost = "/",
+            //ClientProperties = { ["IP"] = myIP }
+        };
 
-            connectionFactory.AutomaticRecoveryEnabled = true;
-            connectionFactory.NetworkRecoveryInterval = TimeSpan.FromSeconds(5);
-            connectionFactory.RequestedHeartbeat = TimeSpan.FromMinutes(5);
-            connectionFactory.DispatchConsumersAsync = true;
+        connectionFactory.AutomaticRecoveryEnabled = true;
+        connectionFactory.NetworkRecoveryInterval = TimeSpan.FromSeconds(5);
+        connectionFactory.RequestedHeartbeat = TimeSpan.FromMinutes(5);
+        connectionFactory.DispatchConsumersAsync = true;
 
-            return connectionFactory.CreateConnection();
-        }
+        return connectionFactory.CreateConnection();
+    }
 
-        private void PublishOrderCreatedMessage(OrderCreatedEvent orderCreatedEvent)
-        {
-            IConnection _connection = this.CreateChannel();
-            using var channel = _connection.CreateModel();
+    private void PublishOrderCreatedMessage(OrderCreatedEvent orderCreatedEvent)
+    {
+        IConnection _connection = this.CreateChannel();
+        using var channel = _connection.CreateModel();
 
-            channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Direct, durable: true);
+        channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Direct, durable: true);
 
-            channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+        channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
-            channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
-            
-            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(orderCreatedEvent));
+        channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
+        
+        var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(orderCreatedEvent));
 
-            channel.BasicPublish(
-                exchange: ExchangeName,
-                routingKey: RoutingKey,
-                basicProperties: null,
-                body: messageBody);
-        }
+        channel.BasicPublish(
+            exchange: ExchangeName,
+            routingKey: RoutingKey,
+            basicProperties: null,
+            body: messageBody);
     }
 }
