@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SagaPatternExample.StockServiceApi.Behaviors;
 using SagaPatternExample.StockServiceApi.Config;
 using SagaPatternExample.StockServiceApi.Models;
-using System.Text;
 
 namespace SagaPatternExample.StockServiceApi.Services;
 
@@ -30,7 +30,12 @@ public class RabbitMQService : BackgroundService
         foreach (Queues item in _rabbitConfig.QueueList!)
         {
             _channel.ExchangeDeclare(item.Exchange, "direct", durable: true);
-            _channel.QueueDeclare(queue: item.Queue, durable: true, exclusive: false, autoDelete: false);
+            _channel.QueueDeclare(
+                queue: item.Queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false
+            );
             _channel.QueueBind(item.Queue, item.Exchange, item.RoutingKey, null);
             _channel.BasicQos(0, 1, false);
             var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -39,7 +44,8 @@ public class RabbitMQService : BackgroundService
                 var content = Encoding.UTF8.GetString(ea.Body.ToArray());
                 if (ea.RoutingKey.Equals("order_direct"))
                 {
-                    OrderProductRequestModel requestModel = JsonConvert.DeserializeObject<OrderProductRequestModel>(content)!;
+                    OrderProductRequestModel requestModel =
+                        JsonConvert.DeserializeObject<OrderProductRequestModel>(content)!;
                     using var scope = _scopeFactory.CreateScope();
                     var stockService = scope.ServiceProvider.GetRequiredService<IStockService>();
 
@@ -58,13 +64,14 @@ public class RabbitMQService : BackgroundService
 
     private IConnection CreateChannel()
     {
-        ConnectionFactory connectionFactory = new()
-        {
-            HostName = _rabbitConfig.HostName,
-            UserName = _rabbitConfig.Username,
-            Password = _rabbitConfig.Password,
-            VirtualHost = "/"
-        };
+        ConnectionFactory connectionFactory =
+            new()
+            {
+                HostName = _rabbitConfig.HostName,
+                UserName = _rabbitConfig.Username,
+                Password = _rabbitConfig.Password,
+                VirtualHost = "/",
+            };
 
         connectionFactory.AutomaticRecoveryEnabled = true;
         connectionFactory.NetworkRecoveryInterval = TimeSpan.FromSeconds(5);
@@ -81,7 +88,13 @@ public class RabbitMQService : BackgroundService
 
         channel.ExchangeDeclare(exchange: ExchangeName, type: ExchangeType.Direct, durable: true);
 
-        channel.QueueDeclare(queue: QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+        channel.QueueDeclare(
+            queue: QueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null
+        );
 
         channel.QueueBind(queue: QueueName, exchange: ExchangeName, routingKey: RoutingKey);
 
@@ -92,6 +105,7 @@ public class RabbitMQService : BackgroundService
             exchange: ExchangeName,
             routingKey: RoutingKey,
             basicProperties: null,
-            body: messageBody);
+            body: messageBody
+        );
     }
 }
