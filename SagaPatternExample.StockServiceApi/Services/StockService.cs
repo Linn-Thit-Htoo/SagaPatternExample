@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SagaPatternExample.Db.AppDbContextModels;
 using SagaPatternExample.StockServiceApi.Models;
 using SagaPatternExample.Utils;
