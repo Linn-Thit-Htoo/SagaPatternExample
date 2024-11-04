@@ -5,5 +5,8 @@ namespace SagaPatternExample.StockServiceApi.Services;
 
 public interface IStockService
 {
-    Task<Result<StockModel>> ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs);
+    Task<Result<StockModel>> ProcessStockAsync(
+        OrderProductRequestModel requestModel,
+        CancellationToken cs
+    );
 }
