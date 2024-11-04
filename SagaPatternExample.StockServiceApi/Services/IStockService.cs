@@ -1,10 +1,9 @@
 ﻿using SagaPatternExample.StockServiceApi.Models;
 using SagaPatternExample.Utils;
 
-namespace SagaPatternExample.StockServiceApi.Services
+namespace SagaPatternExample.StockServiceApi.Services;
+
+public interface IStockService
 {
-    public interface IStockService
-    {
-        Task<Result<StockModel>> ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs);
-    }
+    Task<Result<StockModel>> ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs);
 }
