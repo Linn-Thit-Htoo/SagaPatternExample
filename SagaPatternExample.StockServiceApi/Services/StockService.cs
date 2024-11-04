@@ -14,15 +14,18 @@ public class StockService : IStockService
         _context = context;
     }
 
-    public async Task<Result<StockModel>> ProcessStockAsync(OrderProductRequestModel requestModel, CancellationToken cs)
+    public async Task<Result<StockModel>> ProcessStockAsync(
+        OrderProductRequestModel requestModel,
+        CancellationToken cs
+    )
     {
         Result<StockModel> result;
         try
         {
             foreach (var item in requestModel.OrderDetails)
             {
-                var stock = await _context.TbStockEntries
-                    .Where(x => x.ProductId == item.ProductId)
+                var stock = await _context
+                    .TbStockEntries.Where(x => x.ProductId == item.ProductId)
                     .FirstOrDefaultAsync(cs);
                 ArgumentNullException.ThrowIfNull(stock);
 
