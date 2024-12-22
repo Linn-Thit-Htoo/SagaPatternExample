@@ -41,12 +41,12 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Res
         }
         await _context.SaveChangesAsync(cancellationToken);
 
-        var orderCreatedSuccessEvent = new OrderCreatedEvent()
-        {
-            InvoiceNo = orderEntity.InvoiceNo,
-            OrderDetails = request.OrderDetails,
-        };
-        PublishOrderCreatedMessage(orderCreatedSuccessEvent);
+        //var orderCreatedSuccessEvent = new OrderCreatedEvent()
+        //{
+        //    InvoiceNo = orderEntity.InvoiceNo,
+        //    OrderDetails = request.OrderDetails,
+        //};
+        //PublishOrderCreatedMessage(orderCreatedSuccessEvent);
 
         return Result<OrderModel>.Success();
     }

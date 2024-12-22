@@ -32,7 +32,7 @@ public static class DependencyInjectionExtension
         services.Configure<RabbitMqConfiguration>(config.GetSection("RabbitMQ"));
         services.AddHealthChecks();
 
-        services.AddHostedService<RabbitMQService>();
+        //services.AddHostedService<RabbitMQService>();
 
         return services;
     }
