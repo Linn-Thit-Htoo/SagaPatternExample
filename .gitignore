@@ -365,3 +365,5 @@ FodyWeavers.xsd
 /SagaPatternExample.OrderServiceApi/appsettings.Development.json
 /SagaPatternExample.StockServiceApi/appsettings.json
 /SagaPatternExample.StockServiceApi/appsettings.Development.json
+/SagaPatternExample.OrderServiceApi/Services/RabbitMQService.cs
+/SagaPatternExample.StockServiceApi/Services/RabbitMQService.cs
